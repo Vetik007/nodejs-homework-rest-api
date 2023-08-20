@@ -3,6 +3,7 @@ const Contact = require("../models/contact"); // імпорт функції д�
 const { HttpError, ctrlWrapper } = require("../helpers"); // імпортуємо функцію генерації та виводу помилки
 
 // отритмання всіх контактів
+
 // у req.query зберігаються всі параметри пошуку
 const getListContacts = async (req, res) => {
   const { _id: owner } = req.user;
