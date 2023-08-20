@@ -6,14 +6,26 @@ const { HttpError, ctrlWrapper } = require("../helpers"); // імпортуєм�
 // у req.query зберігаються всі параметри пошуку
 const getListContacts = async (req, res) => {
   const { _id: owner } = req.user;
-  const { page = 1, limit = 10 } = req.query; // (для пагинації)отримуємо значення параметрів page та limit
+  const { page = 1, limit = 20, favorite } = req.query; // (для пагинації)отримуємо значення параметрів page та limit
   const skip = (page - 1) * limit; // Обчислення значення пропуску для операції пошуку
   const result = await Contact.find({ owner }, "", { skip, limit }).populate(
     "owner",
     "email"
   );
-
-  res.json(result);
+  // додаємо фільтрацію контактів по значенню поля favorite(true або false)
+  if (favorite === "true") {
+    const favoriteContacts = result.filter(
+      (contact) => contact.favorite === true
+    );
+    res.status(200).json({ favoriteContacts });
+  } else if (favorite === "false") {
+    const nonFavoriteContacts = result.filter(
+      (contact) => contact.favorite !== true
+    );
+    res.status(200).json({ nonFavoriteContacts });
+  } else {
+    res.status(200).json({ result });
+  }
 };
 
 // отримання контакту по id
