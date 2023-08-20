@@ -3,6 +3,7 @@ const Contact = require("../models/contact"); // імпорт функції д�
 const { HttpError, ctrlWrapper } = require("../helpers"); // імпортуємо функцію генерації та виводу помилки
 
 // отритмання всіх контактів
+
 // у req.query зберігаються всі параметри пошуку
 const getListContacts = async (req, res) => {
   const { _id: owner } = req.user;
@@ -13,6 +14,10 @@ const getListContacts = async (req, res) => {
     "email"
   );
 
+
+const getListContacts = async (req, res) => {
+  const result = await Contact.find();
+
   res.json(result);
 };
 
@@ -20,8 +25,10 @@ const getListContacts = async (req, res) => {
 const getContactById = async (req, res) => {
   const { contactId } = req.params;
 
+
   const result = await Contact.findById(contactId); // використовуємо для пошуку по id
 
+  
   // обробляємо помилку якщо контакт не існує
   if (!result) {
     throw HttpError(404, "Contact not found");
@@ -33,6 +40,7 @@ const getContactById = async (req, res) => {
 const addContacts = async (req, res, next) => {
   const { _id: owner } = req.user;
   const result = await Contact.create({ ...req.body, owner });
+
 
   res.status(201).json(result);
 };
