@@ -10,6 +10,7 @@ const { ctrlWrapper, HttpError } = require("../helpers"); // імпортуєм�
 
 const { SECRET_KEY } = process.env;
 
+// реєстрація користувача
 const register = async (req, res) => {
   // створюємо кастомне повідомлення - перед створенням нового користувача проводимо перевірку чи існує користувач з таким email та якщо так виводимо кастомне повідомлення
   const { email, password } = req.body; // витягуємо значенния полів email та password з тіла запиту
@@ -32,6 +33,7 @@ const register = async (req, res) => {
   });
 };
 
+// логинізація користовуча
 const login = async (req, res) => {
   const { email, password } = req.body; // витягуємо значенния полів email та password з тіла запиту
   const user = await User.findOne({ email }); // шукаємо в базі email вказаний в тілі запиту
@@ -64,6 +66,7 @@ const login = async (req, res) => {
   });
 };
 
+// отримання поточного користувача
 const getCurrent = async (req, res) => {
   const { email, subscription } = req.user;
 
@@ -73,6 +76,7 @@ const getCurrent = async (req, res) => {
   });
 };
 
+// розлогування користовуча
 const logout = async (req, res) => {
   const { _id } = req.user; // отримуємо _id користуача який хоче розлогінитись
   await User.findByIdAndUpdate(_id, { token: "" }); // оновлюємо значення поля токет на пусту строку(видаляємо токен)
@@ -80,9 +84,32 @@ const logout = async (req, res) => {
   res.status(204).json(); // відправляємо відповідь зі статусом 204 та без вмісту тексту помилки
 };
 
+// оновлення підписки
+const updateSubscriptionUser = async (req, res) => {
+  const { _id } = req.user;
+  const { subscription } = req.body;
+  const user = await User.findOneAndUpdate(
+    { _id },
+    { subscription },
+    { new: true }
+  );
+  if (!user) {
+    return res.status(404).json({ message: "Not found" });
+  }
+
+  return res.status(200).json({
+    message: `Your subscription has been changed to ${subscription}`,
+    User_information: {
+      email: user.email,
+      subscription: user.subscription,
+    },
+  });
+};
+
 module.exports = {
   register: ctrlWrapper(register),
   login: ctrlWrapper(login),
   getCurrent: ctrlWrapper(getCurrent),
   logout: ctrlWrapper(logout),
+  updateSubscriptionUser: ctrlWrapper(updateSubscriptionUser),
 };

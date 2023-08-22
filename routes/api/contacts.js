@@ -5,13 +5,11 @@ const router = express.Router(); // створюємо "сторінку зап�
 
 const ctrl = require("../../controllers/contacts");
 
-
 const {
   validateBody,
   isValidId,
   authentificate,
 } = require("../../middlewares");
-
 
 const schemas = require("../../shemas/contacts");
 
@@ -37,7 +35,6 @@ router.delete("/:contactId", authentificate, isValidId, ctrl.removeContacts);
 // внесення змін до контакту
 router.put("/:contactId", [
   authentificate,
-r
   isValidId,
   validateBody(schemas.addSchema, "update"),
   ctrl.updateContact,
