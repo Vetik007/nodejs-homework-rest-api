@@ -5,25 +5,36 @@ const router = express.Router(); // створюємо "сторінку зап�
 
 const ctrl = require("../../controllers/contacts");
 
-const { validateBody, isValidId } = require("../../middlewares");
+const {
+  validateBody,
+  isValidId,
+  authentificate,
+} = require("../../middlewares");
 
 const schemas = require("../../shemas/contacts");
 
 // створюємо мартшрути
 // отритмання всіх контактів
-router.get("/", ctrl.getListContacts);
+
+router.get("/", authentificate, ctrl.getListContacts);
 
 // отримання контакту по id
-router.get("/:contactId", isValidId, ctrl.getContactById);
+router.get("/:contactId", authentificate, isValidId, ctrl.getContactById);
 
 // додавання контакту
-router.post("/", validateBody(schemas.addSchema, "add"), ctrl.addContacts);
+router.post(
+  "/",
+  authentificate,
+  validateBody(schemas.addSchema, "add"),
+  ctrl.addContacts
+);
 
 // видалення контакту
-router.delete("/:contactId", isValidId, ctrl.removeContacts);
+router.delete("/:contactId", authentificate, isValidId, ctrl.removeContacts);
 
 // внесення змін до контакту
 router.put("/:contactId", [
+  authentificate,
   isValidId,
   validateBody(schemas.addSchema, "update"),
   ctrl.updateContact,
@@ -32,6 +43,7 @@ router.put("/:contactId", [
 // оновлення поля favorite
 router.patch(
   "/:contactId/favorite",
+  authentificate,
   isValidId,
   validateBody(schemas.updateFavoriteSchema, "updateStatus"),
   ctrl.updateStatusContact

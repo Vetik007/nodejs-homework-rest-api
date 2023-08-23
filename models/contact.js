@@ -18,6 +18,12 @@ const contactSchema = new Schema(
       type: Boolean,
       default: false, // значення за замовчуванням
     },
+
+    owner: {
+      type: Schema.Types.ObjectId, // зберігається id яке генерує mongoDb
+      ref: "user", // назва колекції з якої це id
+    },
+
   },
   { versionKey: false, timestamps: true }
 );

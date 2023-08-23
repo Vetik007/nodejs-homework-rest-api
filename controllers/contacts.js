@@ -3,16 +3,37 @@ const Contact = require("../models/contact"); // імпорт функції д�
 const { HttpError, ctrlWrapper } = require("../helpers"); // імпортуємо функцію генерації та виводу помилки
 
 // отритмання всіх контактів
+
+// у req.query зберігаються всі параметри пошуку
 const getListContacts = async (req, res) => {
-  const result = await Contact.find();
-  res.json(result);
+  const { _id: owner } = req.user;
+  const { page = 1, limit = 20, favorite } = req.query; // (для пагинації)отримуємо значення параметрів page та limit
+  const skip = (page - 1) * limit; // Обчислення значення пропуску для операції пошуку
+  const result = await Contact.find({ owner }, "", { skip, limit }).populate(
+    "owner",
+    "email"
+  );
+  // додаємо фільтрацію контактів по значенню поля favorite(true або false)
+  if (favorite === "true") {
+    const favoriteContacts = result.filter(
+      (contact) => contact.favorite === true
+    );
+    res.status(200).json({ favoriteContacts });
+  } else if (favorite === "false") {
+    const nonFavoriteContacts = result.filter(
+      (contact) => contact.favorite !== true
+    );
+    res.status(200).json({ nonFavoriteContacts });
+  } else {
+    res.status(200).json({ result });
+  }
 };
 
 // отримання контакту по id
 const getContactById = async (req, res) => {
   const { contactId } = req.params;
 
-  const result = await Contact.findById(contactId); // використовують для пошуку по id
+  const result = await Contact.findById(contactId); // використовуємо для пошуку по id
 
   // обробляємо помилку якщо контакт не існує
   if (!result) {
@@ -23,7 +44,8 @@ const getContactById = async (req, res) => {
 
 // додавання контакту
 const addContacts = async (req, res, next) => {
-  const result = await Contact.create(req.body);
+  const { _id: owner } = req.user;
+  const result = await Contact.create({ ...req.body, owner });
 
   res.status(201).json(result);
 };
