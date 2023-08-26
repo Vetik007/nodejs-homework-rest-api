@@ -3,6 +3,7 @@ const logger = require("morgan");
 const cors = require("cors");
 const dotenv = require("dotenv"); // імпортуємо пакет doterv який завантажує змінні середовища з .env
 
+
 const authRouter = require("./routes/api/auth");
 dotenv.config(); // викликаємо метод config який у корні проєкту шукає файл .env і дані з цього файлу додає у змінні оточення (об'єкт process.env)
 

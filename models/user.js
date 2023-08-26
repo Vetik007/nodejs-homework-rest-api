@@ -28,6 +28,7 @@ const userSchema = new Schema(
       type: String,
       required: true,
     },
+
   },
   { versionKey: false, timestamps: true }
 );

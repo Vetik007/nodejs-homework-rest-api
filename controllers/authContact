@@ -1,5 +1,6 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+
 const path = require("path");
 const fs = require("fs/promises");
 const gravatar = require("gravatar");
@@ -29,6 +30,7 @@ const register = async (req, res) => {
   }
 
   const hashPassword = await bcrypt.hash(password, 10); // хешируеємо пароль, другим аргументом передаємо сіль тобто складність хешируання паролю
+
   const avatarUrl = gravatar.url(email); // у gravatar викликаємо метод url якому передаємо email користовуча який хоче зареєструватись. Повертається посилання на тимчасову аватарку
 
   const newUser = await User.create({
@@ -147,4 +149,5 @@ module.exports = {
   logout: ctrlWrapper(logout),
   updateSubscriptionUser: ctrlWrapper(updateSubscriptionUser),
   updateAvatar: ctrlWrapper(updateAvatar),
+
 };

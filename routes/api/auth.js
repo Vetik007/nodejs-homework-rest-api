@@ -1,7 +1,9 @@
 const express = require("express");
 const ctrl = require("../../controllers/authContact"); // Імпорт контролера для обробки роутів, пов'язаних з аутентифікацією
 
+
 const { validateBody, authentificate, upload } = require("../../middlewares");
+
 
 // const { authSchemas } = require("../../models/user");
 
@@ -39,6 +41,7 @@ router.patch(
   ctrl.updateSubscriptionUser
 );
 
+
 //  оновлення аватарки
 router.patch(
   "/avatars",
@@ -46,5 +49,6 @@ router.patch(
   upload.single("avatar"),
   ctrl.updateAvatar
 );
+
 
 module.exports = router;
