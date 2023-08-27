@@ -1,5 +1,11 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+
+const path = require("path");
+const fs = require("fs/promises");
+const gravatar = require("gravatar");
+const Jimp = require("jimp");
+
 const dotenv = require("dotenv"); // імпортуємо пакет doterv який завантажує змінні середовища з .env
 
 dotenv.config(); // викликаємо метод config який у корні проєкту шукає файл .env і дані з цього файлу додає у змінні оточення (об'єкт process.env)
@@ -9,6 +15,8 @@ const User = require("../models/user"); // імпорт функції моде�
 const { ctrlWrapper, HttpError } = require("../helpers"); // імпортуємо функцію генерації та виводу помилки
 
 const { SECRET_KEY } = process.env;
+
+const avatarDir = path.join(__dirname, "../", "public", "avatars"); // шлях до папки avatars де зберігаються фото аватарок
 
 // реєстрація користувача
 const register = async (req, res) => {
@@ -23,7 +31,13 @@ const register = async (req, res) => {
 
   const hashPassword = await bcrypt.hash(password, 10); // хешируеємо пароль, другим аргументом передаємо сіль тобто складність хешируання паролю
 
-  const newUser = await User.create({ ...req.body, password: hashPassword }); // зберігаємо хеширований пароль(розпилюємо тіло body та значення поля password замінюємо на результат хеширування паролю )
+  const avatarUrl = gravatar.url(email); // у gravatar викликаємо метод url якому передаємо email користовуча який хоче зареєструватись. Повертається посилання на тимчасову аватарку
+
+  const newUser = await User.create({
+    ...req.body,
+    password: hashPassword,
+    avatarUrl,
+  }); // зберігаємо в базі хеширований пароль(розпилюємо тіло body та значення поля password замінюємо на результат хеширування паролю ) та посилання на тимчасову аватарку
 
   res.status(201).json({
     user: {
@@ -106,10 +120,34 @@ const updateSubscriptionUser = async (req, res) => {
   });
 };
 
+// оновлення аватарки
+const updateAvatar = async (req, res) => {
+  const { _id } = req.user; // отримуємо _id користовуча який робить запит
+  const { path: tempUpload, originalname } = req.file; // з інформації про файл(req.file) беремо шлях звідки прийшов файл(tempUpload) та його ім'я(originalname)
+  console.log(tempUpload);
+  console.log(originalname);
+  const filename = `${_id}_${originalname}`; // до ім'я файлу аватарки додаємо id
+  const resultUpload = path.join(avatarDir, filename); // створюємо новий шлях де повинна зберігатись аватарка
+
+  const avatarSize = await Jimp.read(tempUpload); // читаємо зображення з тимчасового місця зберігання аватарки
+  avatarSize.resize(250, 250, Jimp.RESIZE_BEZIER).write(tempUpload); // змінюємо розмір аватарки та перезаписуємо її, замість зображення яке було завантажено від клієнта
+
+  await fs.rename(tempUpload, resultUpload); // переміщуємо файл аватарки з тимчасового місця(tempUpload - папка temp(старий шлях до файлу)), до нової папки - public\avatars(новий шлях до файлу)
+
+  const avatarUrl = path.join("avatars", filename); // створюємо шлях до аватарки
+  await User.findOneAndUpdate(_id, { avatarUrl }); // оновлюємо шлях url до аватарки(записуємо у базу)
+
+  res.json({
+    avatarUrl,
+  });
+};
+
 module.exports = {
   register: ctrlWrapper(register),
   login: ctrlWrapper(login),
   getCurrent: ctrlWrapper(getCurrent),
   logout: ctrlWrapper(logout),
   updateSubscriptionUser: ctrlWrapper(updateSubscriptionUser),
+  updateAvatar: ctrlWrapper(updateAvatar),
+
 };

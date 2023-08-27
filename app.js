@@ -14,11 +14,9 @@ const app = express(); // створюємо веб-сервер
 const formatsLogger = app.get("env") === "development" ? "dev" : "short";
 
 app.use(logger(formatsLogger)); // міделвара яка виводить у консоль інформацію про запит
-
 app.use(cors()); // міделвара кросдомених запитів-скорочений запис(Прим.1)
-
 app.use(express.json()); // міделвара яка перевіряє чи є тіло в запиті при виклику функції додавання контакту
-
+app.use(express.static("public")); // міделвара для обслуговування статичних файлів у директорії public, які будуть доступні по відповідним путям URL у веб додатку
 
 app.use("/users", authRouter);
 app.use("/api/contacts", contactsRouter); // вказуємо серверу де знаходяться маршрути для всіх запитів які починаються з - /api/contacts
