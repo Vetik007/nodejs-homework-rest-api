@@ -1,7 +1,9 @@
 const express = require("express");
 const ctrl = require("../../controllers/authContact"); // Імпорт контролера для обробки роутів, пов'язаних з аутентифікацією
 
+
 const { validateBody, authentificate, upload } = require("../../middlewares");
+
 
 // const { authSchemas } = require("../../models/user");
 
@@ -17,6 +19,7 @@ router.post(
   ctrl.register
 );
 
+
 router.get("/verify/:verificationToken", ctrl.verifiedEmail);
 
 router.post(
@@ -24,6 +27,7 @@ router.post(
   validateBody(authSchemas.emailSchema, "verify"),
   ctrl.resendVerifyEmail
 );
+
 
 // Маршрут POST для входу користувача, валідація тіла запиту за схемою входу
 // signin
