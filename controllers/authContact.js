@@ -58,7 +58,7 @@ const register = async (req, res) => {
   });
 };
 
-const verifiedEmail = async (req, res) => {
+const verifyEmail = async (req, res) => {
   console.log(req.params);
   const { verificationToken } = req.params;
   // const { verificationToken } = req.params; // витягуємо з req.params значення verificationToken
@@ -209,7 +209,7 @@ const updateAvatar = async (req, res) => {
 
 module.exports = {
   register: ctrlWrapper(register),
-  verifiedEmail: ctrlWrapper(verifiedEmail),
+  verifyEmail: ctrlWrapper(verifyEmail),
   resendVerifyEmail: ctrlWrapper(resendVerifyEmail),
   login: ctrlWrapper(login),
   getCurrent: ctrlWrapper(getCurrent),
