@@ -71,7 +71,7 @@ const verifyEmail = async (req, res) => {
 
   // робимо перевірку, якщо такий email в базі відсутній - виводимо повідомлення про помилку, інакше створюємо нового користовуча
   if (!user) {
-    throw HttpError(500, "User not found");
+    throw HttpError(404, "User not found");
   }
 
   // Оновлення користувача за його _id, з встановленням значення verify та ощищення verificationToken(щоб два рази нікто не підтверджував email)
