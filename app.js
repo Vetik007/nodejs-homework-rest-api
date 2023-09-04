@@ -3,7 +3,6 @@ const logger = require("morgan");
 const cors = require("cors");
 const dotenv = require("dotenv"); // імпортуємо пакет doterv який завантажує змінні середовища з .env
 
-
 const authRouter = require("./routes/api/auth");
 dotenv.config(); // викликаємо метод config який у корні проєкту шукає файл .env і дані з цього файлу додає у змінні оточення (об'єкт process.env)
 
@@ -17,6 +16,7 @@ app.use(logger(formatsLogger)); // міделвара яка виводить у
 app.use(cors()); // міделвара кросдомених запитів-скорочений запис(Прим.1)
 app.use(express.json()); // міделвара яка перевіряє чи є тіло в запиті при виклику функції додавання контакту
 app.use(express.static("public")); // міделвара для обслуговування статичних файлів у директорії public, які будуть доступні по відповідним путям URL у веб додатку
+
 
 app.use("/users", authRouter);
 app.use("/api/contacts", contactsRouter); // вказуємо серверу де знаходяться маршрути для всіх запитів які починаються з - /api/contacts

@@ -40,6 +40,13 @@ const validateBody = (schema, operation) => {
         }
 
         next(HttpError(400, errorMessage));
+      } else if (operation === "verify") {
+        if (!req.body[fieldName]) {
+          // Якщо якесь поле запиту відсутнє, виводимо кастомнє повідомлення
+          const errorMessage = `Missing required field ${fieldName}`;
+          return res.status(400).json({ message: errorMessage });
+        }
+
       }
     }
     next();

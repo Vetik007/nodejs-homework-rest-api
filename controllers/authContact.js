@@ -1,20 +1,19 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-
 const path = require("path");
 const fs = require("fs/promises");
 const gravatar = require("gravatar");
 const Jimp = require("jimp");
+const { nanoid } = require("nanoid");
 
 const dotenv = require("dotenv"); // імпортуємо пакет doterv який завантажує змінні середовища з .env
-
 dotenv.config(); // викликаємо метод config який у корні проєкту шукає файл .env і дані з цього файлу додає у змінні оточення (об'єкт process.env)
 
 const User = require("../models/user"); // імпорт функції моделі
 
-const { ctrlWrapper, HttpError } = require("../helpers"); // імпортуємо функцію генерації та виводу помилки
+const { ctrlWrapper, HttpError, sendEmail } = require("../helpers"); // імпортуємо функцію генерації та виводу помилки
 
-const { SECRET_KEY } = process.env;
+const { SECRET_KEY, BASE_URL } = process.env;
 
 const avatarDir = path.join(__dirname, "../", "public", "avatars"); // шлях до папки avatars де зберігаються фото аватарок
 
@@ -30,20 +29,86 @@ const register = async (req, res) => {
   }
 
   const hashPassword = await bcrypt.hash(password, 10); // хешируеємо пароль, другим аргументом передаємо сіль тобто складність хешируання паролю
-
   const avatarUrl = gravatar.url(email); // у gravatar викликаємо метод url якому передаємо email користовуча який хоче зареєструватись. Повертається посилання на тимчасову аватарку
+  const verificationToken = nanoid(); // створюємо код підтвердження
 
   const newUser = await User.create({
     ...req.body,
     password: hashPassword,
     avatarUrl,
-  }); // зберігаємо в базі хеширований пароль(розпилюємо тіло body та значення поля password замінюємо на результат хеширування паролю ) та посилання на тимчасову аватарку
+    verificationToken,
+  }); // зберігаємо в базі хеширований пароль(розпилюємо тіло body та значення поля password замінюємо на результат хеширування паролю ), посилання на тимчасову аватарку та код пыдтвердження
+
+  // створюємо email для підтвердження користовуча
+  const verifyEmail = {
+    to: email, // кому - email користовуча який зареєструвався
+    subject: "Verify email", // тема листа
+    text: "Verify your email",
+
+    html: `<html><a target="_blank" href='${BASE_URL}/users/verify/${verificationToken}'>Click to verify email</a></html>`,
+  };
+
+  // викликаємо функцію sendEmail - відправляємо листа
+  await sendEmail(verifyEmail);
 
   res.status(201).json({
     user: {
       email: newUser.email,
       subscription: newUser.subscription,
     },
+  });
+};
+
+const myTest = async (req, res) => {
+  console.log("it worked");
+};
+
+const verifyEmail = async (req, res) => {
+  console.log(req.params);
+  const { verificationToken } = req.params;
+  // const { verificationToken } = req.params; // витягуємо з req.params значення verificationToken
+  const user = await User.findOne({ verificationToken }); // перевіряємо чи є в базі користуач з таким verificationToken
+
+  // робимо перевірку, якщо такий email в базі відсутній - виводимо повідомлення про помилку, інакше створюємо нового користовуча
+  if (!user) {
+    throw HttpError(404, "User not found");
+  }
+
+  // Оновлення користувача за його _id, з встановленням значення verify та ощищення verificationToken(щоб два рази нікто не підтверджував email)
+  await User.findByIdAndUpdate(user._id, {
+    verify: true,
+    verificationToken: null,
+  });
+
+  res.status(200).json({
+    ResponseBody: {
+      message: "Verification successful",
+    },
+  });
+};
+
+const resendVerifyEmail = async (req, res) => {
+  const { email } = req.body; // витягуємо значенния поля email з тіла запиту
+  const user = await User.findOne({ email }); // шукаємо в базі email вказаний в тілі запиту
+
+  if (!user) {
+    throw HttpError(401, "Email not found");
+  }
+
+  if (user.verify) {
+    throw HttpError(400, "Verification has already been passed");
+  }
+
+  const verifyEmail = {
+    to: email, // кому - email користовуча який зареєструвався
+    subject: "Verify email", // тема листа
+    html: `<a target="_blank" href="${BASE_URL}/api/auth/verify/${user.verificationToken}">Click verify email</a>`, // зміст листа - передаємо посилання
+  };
+
+  await sendEmail(verifyEmail);
+
+  res.status(201).json({
+    message: "Verify email send success",
   });
 };
 
@@ -55,6 +120,11 @@ const login = async (req, res) => {
   // робимо перевірку, якщо такий email в базі відсутній - виводимо повідомлення про помилку, інакше створюємо нового користовуча
   if (!user) {
     throw HttpError(401, "Email or password is wtrong");
+  }
+
+  //  проводимо перевірку - якщо verify=false (тобто користувач не підтвердив електронну адресу) виводимо повідомлення
+  if (!user.verify) {
+    throw HttpError(401, "Email not verified");
   }
 
   // перевіряємо(порівнюємо) пароль - перший аргумент пароль з тіла запиту другий аргумент пароль який зберігаеється в базі в захешированому вигляді
@@ -144,10 +214,12 @@ const updateAvatar = async (req, res) => {
 
 module.exports = {
   register: ctrlWrapper(register),
+  verifyEmail: ctrlWrapper(verifyEmail),
+  resendVerifyEmail: ctrlWrapper(resendVerifyEmail),
   login: ctrlWrapper(login),
   getCurrent: ctrlWrapper(getCurrent),
   logout: ctrlWrapper(logout),
   updateSubscriptionUser: ctrlWrapper(updateSubscriptionUser),
   updateAvatar: ctrlWrapper(updateAvatar),
-
+  myTest: ctrlWrapper(myTest),
 };
