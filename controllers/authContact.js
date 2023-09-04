@@ -44,7 +44,8 @@ const register = async (req, res) => {
     to: email, // кому - email користовуча який зареєструвався
     subject: "Verify email", // тема листа
     text: "Verify your email",
-    html: `<html><a target="_blank" href='${BASE_URL}/api/auth/verify/${verificationToken}'>Click to verify email</a></html>`,
+
+    html: `<html><a target="_blank" href='${BASE_URL}/users/verify/${verificationToken}'>Click to verify email</a></html>`,
   };
 
   // викликаємо функцію sendEmail - відправляємо листа
@@ -58,6 +59,10 @@ const register = async (req, res) => {
   });
 };
 
+const myTest = async (req, res) => {
+  console.log("it worked");
+};
+
 const verifyEmail = async (req, res) => {
   console.log(req.params);
   const { verificationToken } = req.params;
@@ -66,7 +71,7 @@ const verifyEmail = async (req, res) => {
 
   // робимо перевірку, якщо такий email в базі відсутній - виводимо повідомлення про помилку, інакше створюємо нового користовуча
   if (!user) {
-    throw HttpError(404, "User not found");
+    throw HttpError(500, "User not found");
   }
 
   // Оновлення користувача за його _id, з встановленням значення verify та ощищення verificationToken(щоб два рази нікто не підтверджував email)
@@ -216,4 +221,5 @@ module.exports = {
   logout: ctrlWrapper(logout),
   updateSubscriptionUser: ctrlWrapper(updateSubscriptionUser),
   updateAvatar: ctrlWrapper(updateAvatar),
+  myTest: ctrlWrapper(myTest),
 };
