@@ -46,6 +46,7 @@ const validateBody = (schema, operation) => {
           const errorMessage = `Missing required field ${fieldName}`;
           return res.status(400).json({ message: errorMessage });
         }
+
       }
     }
     next();
